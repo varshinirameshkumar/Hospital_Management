@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased font-sans;
+  }
+}
+
+@keyframes aura-float {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(3%, 3%) scale(1.05); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.bg-aura {
+  position: relative;
+  background: #0f172a;
+  overflow: hidden;
+}
+
+.bg-aura::before {
+  content: "";
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 70%;
+  height: 70%;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.2), transparent 70%);
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: aura-float 8s infinite alternate ease-in-out;
+}
+
+.bg-clinical {
+  background-color: #ffffff;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.04) 0px, transparent 50%);
+}
+
+@layer components {
+  .input-modern {
+    @apply w-full px-5 py-4 rounded-2xl border border-slate-200 bg-slate-50/50 
+           text-slate-900 text-base font-medium transition-all duration-200
+           placeholder:text-slate-400 placeholder:font-normal
+           focus:bg-white focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 
+           focus:shadow-lg focus:shadow-blue-600/5 outline-none;
+  }
+
+  .label-modern {
+    @apply block text-sm font-bold text-slate-600 mb-2 ml-1 tracking-tight uppercase;
+  }
+
+  .btn-primary-modern {
+    @apply w-full bg-blue-600 text-white py-4.5 rounded-2xl font-bold text-lg
+           shadow-xl shadow-blue-600/25 hover:bg-blue-700 hover:shadow-blue-600/40
+           active:scale-[0.97] transition-all duration-200 
+           flex items-center justify-center gap-2;
+  }
+}
