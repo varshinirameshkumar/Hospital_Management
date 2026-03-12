@@ -35,7 +35,8 @@ public ResponseEntity<User> register(@RequestBody User user) {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isPresent()) {
             return ResponseEntity.ok(user.get());
-        } else {
+        } 
+        else {
             return ResponseEntity.status(404).body("User not found");
         }
     }
