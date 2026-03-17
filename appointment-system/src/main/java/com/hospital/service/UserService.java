@@ -19,8 +19,11 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User updateDoctorSlots(String doctorId, List<com.hospital.model.Slot> slots) {
-        User doctor = userRepository.findById(doctorId).orElseThrow();
+    public User updateDoctorSlots(String email, List<String> slots) {
+       
+        User doctor = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+        
         doctor.setAvailableSlots(slots);
         return userRepository.save(doctor);
     }

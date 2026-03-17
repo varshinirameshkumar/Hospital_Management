@@ -12,20 +12,20 @@ const Register = () => {
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            await api.post('/auth/register', formData);
-            alert("Registration Successful! Redirecting to Login...");
-            navigate('/login'); 
-        } 
-
-
+    e.preventDefault();
+    try {
         
-        catch (err) {
-            console.error(err);
-            alert("Registration failed. Check if Backend is running.");
-        }
-    };
+        const res = await api.post('/auth/register', formData); 
+        console.log("Success:", res.data);
+        navigate('/login');
+    } 
+    
+    
+    catch (err) {
+        console.error("Error details:", err.response);
+        alert("Registration failed. Check console for details.");
+    }
+};
 
     return (
         <div className="flex min-h-screen font-sans bg-slate-50">

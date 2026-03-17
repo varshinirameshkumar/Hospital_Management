@@ -22,8 +22,8 @@ public class DoctorController {
         this.userService = userService;
     }
 
-    @PutMapping("/{id}/slots")
-    public User setSlots(@PathVariable String id, @RequestBody List<com.hospital.model.Slot> slots) {
-        return userService.updateDoctorSlots(id, slots);
+    @PutMapping("/{email}/slots")
+    public User setSlots(@PathVariable String email, @RequestBody List<String> slots) {
+        return userService.updateDoctorSlots(email, slots);
     }
 }

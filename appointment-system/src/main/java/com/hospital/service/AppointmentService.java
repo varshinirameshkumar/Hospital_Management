@@ -1,7 +1,9 @@
 package com.hospital.service;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.hospital.model.Appointment;
@@ -11,38 +13,39 @@ import com.hospital.repository.UserRepository;
 
 @Service
 public class AppointmentService {
-    private final AppointmentRepository appointmentRepository;
-    private final UserRepository userRepository;
 
-    public AppointmentService(AppointmentRepository appointmentRepository, UserRepository userRepository) {
-        this.appointmentRepository = appointmentRepository;
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private AppointmentRepository appointmentRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     public Appointment bookAppointment(Appointment app) {
+        Optional<User> doctorOpt = userRepository.findByEmail(app.getDoctorEmail());
         
-        User doctor = userRepository.findById(app.getDoctorId()).orElseThrow();
-        boolean slotExists = doctor.getAvailableSlots().stream()
-            .anyMatch(s -> s.getDate().equals(app.getAppointmentDate()) && 
-                           s.getStartTime().equals(app.getStartTime()) && !s.isBooked());
-        
-        if (!slotExists) throw new RuntimeException("Doctor is not available at this time.");
+        if (doctorOpt.isEmpty()) {
+            throw new RuntimeException("Doctor not found.");
+        }
 
-    
-        List<Appointment> existing = appointmentRepository.findByDoctorId(app.getDoctorId());
-        boolean overlap = existing.stream().anyMatch(e -> 
-            e.getAppointmentDate().equals(app.getAppointmentDate()) &&
-            app.getStartTime().compareTo(e.getEndTime()) < 0 &&
-            e.getStartTime().compareTo(app.getEndTime()) < 0
-        );
+        User doctor = doctorOpt.get();
+        boolean isSlotAvailable = doctor.getAvailableSlots().contains(app.getSlotTime());
 
-        if (overlap) throw new RuntimeException("Time slot overlaps with an existing appointment.");
+        if (!isSlotAvailable) {
+            throw new RuntimeException("This time slot is no longer available.");
+        }
 
-        doctor.getAvailableSlots().stream()
-            .filter(s -> s.getStartTime().equals(app.getStartTime())).forEach(s -> s.setBooked(true));
+        doctor.getAvailableSlots().remove(app.getSlotTime());
         userRepository.save(doctor);
-        
-        app.setStatus("BOOKED");
+
+        app.setStatus("CONFIRMED");
         return appointmentRepository.save(app);
+    }
+
+    public List<Appointment> getAppointmentsByPatient(String email) {
+        return appointmentRepository.findByPatientEmail(email);
+    }
+
+    public List<Appointment> getAppointmentsByDoctor(String email) {
+        return appointmentRepository.findByDoctorEmail(email);
     }
 }

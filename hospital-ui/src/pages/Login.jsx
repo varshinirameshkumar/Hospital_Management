@@ -7,22 +7,39 @@ const Login = () => {
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
-        e.preventDefault();
-        try {
-            const res = await api.get(`/auth/login`, { params: { email: email.trim().toLowerCase() } });
+    e.preventDefault();
+    try {
+        
+        const trimmedEmail = email.trim().toLowerCase();
+        
+        const res = await api.get(`/auth/login`, { 
+            params: { email: trimmedEmail } 
+        });
+
+        if (res.data) {
             localStorage.setItem('user', JSON.stringify(res.data));
+            
             if (res.data.role === 'DOCTOR') {
                 navigate('/doctor-dashboard');
             } 
+            
             else {
                 navigate('/patient-dashboard');
             }
-        } 
-        catch (err) {
-            console.error(err);
-            alert("Login failed. Make sure you registered this email.");
         }
-    };
+    } catch (err) {
+        console.error("Login Error Status:", err.response?.status);
+        console.error("Login Error Data:", err.response?.data);
+        
+        if (err.response?.status === 404) {
+            alert("This email is not registered. Please register first.");
+        } 
+        
+        else {
+            alert("Something went wrong. Please check if the backend is running.");
+        }
+    }
+};
 
     return (
         <div className="flex min-h-screen font-sans bg-slate-50">

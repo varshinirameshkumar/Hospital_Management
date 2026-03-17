@@ -1,24 +1,60 @@
-import React, { useState } from 'react';
-import { User, Clock, CheckCircle, Calendar, Plus, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { User, Clock, Calendar, Plus, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/axiosConfig';
 
 const DoctorDashboard = () => {
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem('user'));
-    
-    const [appointments] = useState([
-        { id: 1, patientName: "Srivarshini", time: "10:30 AM", status: "Confirmed" },
-        { id: 2, patientName: "John Doe", time: "11:15 AM", status: "Pending" }
-    ]);
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem('user')));
+    const [newSlot, setNewSlot] = useState('');
+    const [slots, setSlots] = useState([]); 
+
+    useEffect(() => {
+        const fetchLatestData = async () => {
+            if (!user?.email) return;
+            try {
+                const res = await api.get(`/auth/login`, { params: { email: user.email } });
+                setSlots(res.data.availableSlots || []);
+                localStorage.setItem('user', JSON.stringify(res.data));
+                setUser(res.data);
+            } catch (err) {
+                console.error("Error fetching latest slots:", err);
+            }
+        };
+        fetchLatestData();
+    }, [user?.email]); 
+
+    const handleAddSlot = async () => {
+        if (!newSlot) return;
+       
+        const updatedSlots = [...slots, newSlot];
+        
+        try {
+            
+            const res = await api.post(`/auth/update-slots`, updatedSlots, {
+                params: { email: user?.email }
+            });
+            
+            setSlots(res.data.availableSlots);
+            localStorage.setItem('user', JSON.stringify(res.data));
+            setUser(res.data);
+            setNewSlot('');
+            alert("Slot added successfully!");
+        } catch (err) {
+            console.error(err);
+            alert("Failed to update slots. Check if backend is running.");
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('user');
         navigate('/login');
     };
 
+    if (!user) return <div className="p-10">Loading...</div>;
+
     return (
         <div className="flex min-h-screen bg-slate-50">
-            
             <div className="w-64 bg-slate-900 text-white p-6 flex flex-col justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-10 text-blue-400 font-black text-xl">
@@ -29,9 +65,6 @@ const DoctorDashboard = () => {
                         <div className="flex items-center gap-3 p-3 bg-blue-600 rounded-xl cursor-pointer">
                             <Calendar size={20} /> <span className="font-medium">Dashboard</span>
                         </div>
-                        <div className="flex items-center gap-3 p-3 text-slate-400 hover:text-white transition cursor-pointer">
-                            <User size={20} /> <span className="font-medium">Patients</span>
-                        </div>
                     </nav>
                 </div>
                 <button onClick={handleLogout} className="flex items-center gap-3 p-3 text-red-400 hover:bg-red-400/10 rounded-xl transition">
@@ -39,82 +72,50 @@ const DoctorDashboard = () => {
                 </button>
             </div>
 
-            <div className="flex-1 p-10">
+            <div className="flex-1 p-10 text-left">
                 <header className="flex justify-between items-center mb-10">
                     <div>
                         <h1 className="text-3xl font-black text-slate-900 tracking-tight">Doctor Portal</h1>
-                        <p className="text-slate-500 font-medium">Manage your daily schedule and patients.</p>
-                    </div>
-                    <div className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-200">
-                        <div className="text-right">
-                            <p className="font-bold text-slate-900">Dr. {user?.name}</p>
-                            <p className="text-xs text-blue-600 font-bold uppercase tracking-wider">{user?.specialization}</p>
-                        </div>
-                        <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center font-black">
-                            {user?.name?.charAt(0)}
-                        </div>
+                        <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-1">Dr. {user.name} | {user.specialization}</p>
                     </div>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    
                     <div className="lg:col-span-2 space-y-8">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                                <p className="text-slate-500 text-sm font-bold uppercase mb-2">Total Patients</p>
-                                <h2 className="text-4xl font-black text-slate-900">12</h2>
+                        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+                            <h3 className="font-black text-slate-900 mb-6 text-xl">Manage Available Slots</h3>
+                            <div className="flex gap-4 mb-8">
+                                <input 
+                                    type="time" 
+                                    className="flex-1 bg-slate-100 p-4 rounded-2xl outline-none focus:ring-2 ring-blue-500 font-bold"
+                                    value={newSlot}
+                                    onChange={(e) => setNewSlot(e.target.value)}
+                                />
+                                <button onClick={handleAddSlot} className="bg-blue-600 text-white px-8 rounded-2xl font-black flex items-center gap-2 hover:bg-blue-700 transition active:scale-95">
+                                    <Plus size={20} /> Add
+                                </button>
                             </div>
-                            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                                <p className="text-slate-500 text-sm font-bold uppercase mb-2">Pending Appointments</p>
-                                <h2 className="text-4xl font-black text-blue-600">04</h2>
-                            </div>
-                        </div>
 
-                        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                                <h3 className="font-black text-slate-900">Today's Appointments</h3>
-                                <button className="text-blue-600 font-bold text-sm">View All</button>
-                            </div>
-                            <div className="p-6">
-                                {appointments.map(app => (
-                                    <div key={app.id} className="flex items-center justify-between p-4 hover:bg-slate-50 rounded-2xl transition mb-2">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
-                                                <User size={18} />
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-slate-900">{app.patientName}</p>
-                                                <p className="text-xs text-slate-500 flex items-center gap-1">
-                                                    <Clock size={12} /> {app.time}
-                                                </p>
-                                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {slots && slots.length > 0 ? (
+                                    slots.map((slot, index) => (
+                                        <div key={index} className="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex justify-between items-center animate-in fade-in zoom-in duration-300">
+                                            <span className="font-black text-blue-700">{slot}</span>
+                                            <Clock size={16} className="text-blue-300" />
                                         </div>
-                                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                                            {app.status}
-                                        </span>
-                                    </div>
-                                ))}
+                                    ))
+                                ) : (
+                                    <p className="text-slate-400 font-medium italic">No slots added yet.</p>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    <div className="space-y-8">
-                        <div className="bg-blue-600 p-8 rounded-3xl text-white shadow-lg shadow-blue-200">
-                            <h3 className="text-xl font-bold mb-2">Availability</h3>
-                            <p className="text-blue-100 text-sm mb-6 leading-relaxed">Define your working hours so patients can book appointments.</p>
-                            <button className="w-full bg-white text-blue-600 py-3 rounded-xl font-black flex items-center justify-center gap-2 hover:bg-blue-50 transition">
-                                <Plus size={20} /> Add Time Slot
-                            </button>
-                        </div>
-
-                        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                            <h3 className="font-black text-slate-900 mb-4">Quick Actions</h3>
-                            <div className="space-y-3">
-                                <div className="p-4 border border-slate-100 rounded-2xl flex items-center gap-3 cursor-pointer hover:border-blue-200 transition">
-                                    <CheckCircle className="text-blue-600" size={20} />
-                                    <span className="font-bold text-slate-700 text-sm">Mark as Out-of-Office</span>
-                                </div>
-                            </div>
+                    <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm h-fit">
+                        <h3 className="font-black text-slate-900 mb-4">Quick Stats</h3>
+                        <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Total Active Slots</p>
+                            <p className="text-3xl font-black text-blue-600">{slots ? slots.length : 0}</p>
                         </div>
                     </div>
                 </div>

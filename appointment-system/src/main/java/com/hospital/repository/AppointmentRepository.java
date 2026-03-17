@@ -7,6 +7,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.hospital.model.Appointment;
 
 public interface AppointmentRepository extends MongoRepository<Appointment, String> {
-    List<Appointment> findByDoctorId(String doctorId);
-    List<Appointment> findByPatientId(String patientId);
+    List<Appointment> findByPatientEmail(String email);
+    List<Appointment> findByDoctorEmail(String email);
 }

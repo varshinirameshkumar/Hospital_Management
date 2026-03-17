@@ -1,5 +1,6 @@
 package com.hospital.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -17,5 +18,5 @@ public class User {
     private String role; 
     private String specialization;
     
-    private List<Slot> availableSlots; 
+    private List<String> availableSlots = new ArrayList<>(); 
 }
